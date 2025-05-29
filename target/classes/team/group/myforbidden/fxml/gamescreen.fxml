@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane fx:id="anchorPane" prefHeight="1024.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="team.group.myforbidden.controller.GameScreenController">
+    <children>
+        <ImageView fitHeight="1300.0" fitWidth="1300.0" pickOnBounds="true" preserveRatio="true">
+            <image>
+                <Image url="@../image/gameback.jpg" />
+            </image>
+        </ImageView>
+      <ImageView fitHeight="216.0" fitWidth="129.0" layoutX="6.0" layoutY="383.0" opacity="0.5" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../image/deckback.png" />
+         </image>
+      </ImageView>
+
+              <!-- Top-left corner ImageView -->
+        <ImageView fx:id="cornerTopLeft" fitHeight="131.6" fitWidth="94.5" layoutX="20.0" layoutY="20.0" onMouseClicked="#mouseClickedTopLeft" pickOnBounds="true" preserveRatio="true" />
+
+        <!-- Top-right corner ImageView -->
+        <ImageView fx:id="cornerTopRight" fitHeight="131.6" fitWidth="94.5" layoutX="909.5" layoutY="20.0" onMouseClicked="#mouseClickedTopRight" pickOnBounds="true" preserveRatio="true" />
+
+        <!-- Bottom-left corner ImageView -->
+        <ImageView fx:id="cornerBottomLeft" fitHeight="131.6" fitWidth="94.5" layoutX="20.0" layoutY="822.0" onMouseClicked="#mouseClickedDownLeft" pickOnBounds="true" preserveRatio="true" />
+
+        <!-- Bottom-right corner ImageView -->
+        <ImageView fx:id="cornerBottomRight" fitHeight="131.6" fitWidth="94.5" layoutX="909.5" layoutY="822.4" onMouseClicked="#mouseClickedDownRight" pickOnBounds="true" preserveRatio="true" />
+
+        <GridPane fx:id="gridPane" hgap="10" layoutX="173.0" layoutY="166.0" prefHeight="618.0" prefWidth="677.0" vgap="10">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="16.66" />
+                <ColumnConstraints percentWidth="16.66" />
+                <ColumnConstraints percentWidth="16.66" />
+                <ColumnConstraints percentWidth="16.66" />
+                <ColumnConstraints percentWidth="16.66" />
+                <ColumnConstraints percentWidth="16.66" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints percentHeight="16.66" />
+                <RowConstraints percentHeight="16.66" />
+                <RowConstraints percentHeight="16.66" />
+                <RowConstraints percentHeight="16.66" />
+                <RowConstraints percentHeight="16.66" />
+                <RowConstraints percentHeight="16.66" />
+            </rowConstraints>
+            <children>
+                <!-- place0 ~ place23 保持不变 -->
+                <ImageView fx:id="place0" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                <ImageView fx:id="place1" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace1" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                <ImageView fx:id="place2" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace2" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <ImageView fx:id="place3" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace3" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                <ImageView fx:id="place4" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace4" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                <ImageView fx:id="place5" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace5" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+                <ImageView fx:id="place6" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace6" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <ImageView fx:id="place7" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace7" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                <ImageView fx:id="place8" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace8" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                <ImageView fx:id="place9" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace9" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                <ImageView fx:id="place10" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace10" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+                <ImageView fx:id="place11" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace11" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="5" GridPane.rowIndex="2" />
+                <ImageView fx:id="place12" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace12" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                <ImageView fx:id="place13" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace13" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                <ImageView fx:id="place14" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace14" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                <ImageView fx:id="place15" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace15" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                <ImageView fx:id="place16" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace16" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+                <ImageView fx:id="place17" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace17" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="5" GridPane.rowIndex="3" />
+                <ImageView fx:id="place18" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace18" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                <ImageView fx:id="place19" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace19" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                <ImageView fx:id="place20" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace20" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+                <ImageView fx:id="place21" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace21" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="4" GridPane.rowIndex="4" />
+                <ImageView fx:id="place22" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace22" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+                <ImageView fx:id="place23" fitHeight="100" fitWidth="100" onMouseClicked="#mouseClickedPlace23" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="3" GridPane.rowIndex="5" />
+                <Button fx:id="move" mnemonicParsing="false" onMouseClicked="#mouseClickedMove" onMouseEntered="#mouseEnteredMove" onMouseExited="#mouseExitedMove" prefHeight="105.0" prefWidth="108.0" style="-fx-background-color: #a7c5eb; -fx-text-fill: #2f2f2f;                -fx-font-size: 16px; -fx-font-family: 'Comic Sans MS';                -fx-background-radius: 14;                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 5, 0, 0, 2);" text="Move" />
+
+                <Button fx:id="shoreUp" mnemonicParsing="false" onMouseClicked="#mouseClickedShoreUp" onMouseEntered="#mouseEnteredShoreUp" onMouseExited="#mouseExitedShoreUp" prefHeight="116.0" prefWidth="145.0" style="-fx-background-color: #b2dfdb; -fx-text-fill: #2f2f2f;                -fx-font-size: 16px; -fx-font-family: 'Comic Sans MS';                -fx-background-radius: 14;                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 5, 0, 0, 2);" text="Shore Up" GridPane.columnIndex="5" />
+
+                <Button fx:id="give" mnemonicParsing="false" onMouseClicked="#mouseClickedGive" onMouseEntered="#mouseEnteredGive" onMouseExited="#mouseExitedGive" prefHeight="113.0" prefWidth="128.0" style="-fx-background-color: #ffe082; -fx-text-fill: #2f2f2f;                -fx-font-size: 16px; -fx-font-family: 'Comic Sans MS';                -fx-background-radius: 14;                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 5, 0, 0, 2);" text="Give" GridPane.rowIndex="5" />
+
+                <Button fx:id="capture" mnemonicParsing="false" onMouseClicked="#mouseClickedCapture" onMouseEntered="#mouseEnteredCapture" onMouseExited="#mouseExitedCapture" prefHeight="123.0" prefWidth="117.0" style="-fx-background-color: #d1c4e9; -fx-text-fill: #2f2f2f;                -fx-font-size: 16px; -fx-font-family: 'Comic Sans MS';                -fx-background-radius: 14;                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 5, 0, 0, 2);" text="Capture" GridPane.columnIndex="5" GridPane.rowIndex="5" />
+
+
+
+            </children>
+        </GridPane>
+      <VBox layoutX="20.0" layoutY="410.0" prefHeight="161.0" prefWidth="100.0" spacing="15.0">
+         <children>
+            <ImageView fitHeight="76.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../image/treasuredeck.png" />
+               </image>
+            </ImageView>
+            <ImageView fitHeight="76.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../image/flooddeck.png" />
+               </image>
+            </ImageView>
+         </children>
+      </VBox>
+      <ScrollPane layoutX="115.0" layoutY="20.0" prefHeight="131.0" prefWidth="332.0" style="-fx-background-color: transparent; -fx-background: transparent;">
+         <content>
+            <HBox prefHeight="112.0" prefWidth="410.0">
+               <children>
+                  <ImageView fx:id="card11" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked11" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card12" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked12" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card13" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked13" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card14" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked14" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card15" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked15" pickOnBounds="true" preserveRatio="true" />
+               </children>
+            </HBox>
+         </content>
+      </ScrollPane>
+      <ScrollPane layoutX="578.0" layoutY="20.0" prefHeight="131.0" prefWidth="332.0" style="-fx-background-color: transparent; -fx-background: transparent;">
+         <content>
+            <HBox prefHeight="114.0" prefWidth="418.0">
+               <children>
+                  <ImageView fx:id="card21" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked21" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card22" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked22" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card23" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked23" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card24" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked24" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card25" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked25" pickOnBounds="true" preserveRatio="true" />
+               </children>
+            </HBox>
+         </content>
+      </ScrollPane>
+      <ScrollPane layoutX="115.0" layoutY="822.0" prefHeight="131.0" prefWidth="332.0" style="-fx-background-color: transparent; -fx-background: transparent;">
+         <content>
+            <HBox prefHeight="114.0" prefWidth="371.0">
+               <children>
+                  <ImageView fx:id="card31" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked31" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card32" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked32" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card33" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked33" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card34" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked34" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card35" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked35" pickOnBounds="true" preserveRatio="true" />
+               </children>
+            </HBox>
+         </content>
+      </ScrollPane>
+      <ScrollPane layoutX="578.0" layoutY="822.0" prefHeight="131.0" prefWidth="332.0" style="-fx-background-color: transparent; -fx-background: transparent;">
+         <content>
+            <HBox prefHeight="114.0" prefWidth="393.0">
+               <children>
+                  <ImageView fx:id="card41" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked41" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card42" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked42" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card43" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked43" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card44" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked44" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="card45" fitHeight="114.0" fitWidth="87.0" onMouseClicked="#mouseClicked45" pickOnBounds="true" preserveRatio="true" />
+               </children>
+            </HBox>
+         </content>
+      </ScrollPane>
+      <ImageView fx:id="pawnOne" fitHeight="52.0" fitWidth="43.0" layoutX="410.0" layoutY="170.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fx:id="pawnThree" fitHeight="52.0" fitWidth="43.0" layoutX="410.0" layoutY="210.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fx:id="pawnTwo" fitHeight="52.0" fitWidth="43.0" layoutX="460.0" layoutY="170.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fx:id="pawnFour" fitHeight="52.0" fitWidth="43.0" layoutX="460.0" layoutY="210.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fitHeight="294.0" fitWidth="200.0" layoutX="857.0" layoutY="322.0" opacity="0.5" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../image/deckback.png" />
+         </image>
+      </ImageView>
+        <VBox alignment="TOP_CENTER" layoutX="867.0" layoutY="329.0" prefHeight="320.0" prefWidth="128.0" spacing="20.0" style="-fx-background-color: transparent; -fx-padding: 15;">
+            <children>
+                <Label prefHeight="22.0" prefWidth="110.0" style="-fx-font-family: 'Comic Sans MS'; -fx-font-size: 14px; -fx-text-fill: #333;" text="Action Remain:" />
+
+                <Label fx:id="action" style="-fx-font-family: 'Comic Sans MS'; -fx-font-size: 14px; -fx-text-fill: #333;" text="0" />
+            <Label style="-fx-font-family: 'Comic Sans MS'; -fx-font-size: 14px; -fx-text-fill: #333;" text="Water Level:" />
+            <Label fx:id="level" style="-fx-font-family: 'Comic Sans MS'; -fx-font-size: 14px; -fx-text-fill: #333;" text="2" />
+
+                <Button fx:id="nextTurn" maxWidth="Infinity" onMouseClicked="#mouseClickedNextTurn" onMouseEntered="#mouseEnteredNextTurn" onMouseExited="#mouseExitedNextTurn" style="-fx-font-family: 'Comic Sans MS'; -fx-font-size: 13px; -fx-background-color: #4CAF50; -fx-text-fill: white; -fx-background-radius: 10;" text="Next Turn" />
+
+                <Button fx:id="useSkill" maxWidth="Infinity" onMouseClicked="#mouseClickedUseSkill" onMouseEntered="#mouseEnteredUseSkill" onMouseExited="#mouseExitedUseSkill" style="-fx-font-family: 'Comic Sans MS'; -fx-font-size: 13px; -fx-background-color: #2196F3; -fx-text-fill: white; -fx-background-radius: 10;" text="Use Skill" />
+            </children>
+        </VBox>
+
+
+    </children>
+</AnchorPane>
