@@ -1,0 +1,177 @@
+@startuml
+actor ThePlayer as thePlayer
+participant "Main" as main
+participant "playerListener" as playerListener
+participant "MenuListener" as menuListener
+participant "ForbiddenGame" as forbiddenGame
+participant "GameScreen" as gameScreen
+participant "MenuScreen" as menuScreen
+participant "ScoreKeeper" as scoreKeeper
+participant "GameManager" as gameManager
+
+
+participant "AboutScreen" as aboutScreen
+participant "SettingScreen" as settingScreen
+participant "ScoreScreen" as scoreScreen
+
+participant "CardDeck" as cardDeck
+participant "Cards" as cards
+participant "Map" as map
+
+participant "Player" as player
+participant "IslandTile" as islandTile
+participant "Treasure" as treasure
+
+== Init Game! ==
+
+thePlayer -> main : start
+activate main
+main -> playerListener : playerListener
+activate playerListener
+main -> menuListener : menuListener
+activate menuListener
+main -> forbiddenGame : forbiddenGame
+activate forbiddenGame
+main -> gameScreen : gameScreen
+activate gameScreen
+main -> menuScreen : menuScreen
+activate menuScreen
+main -> scoreKeeper : scoreKeeper
+activate scoreKeeper
+main -> gameManager : gameManager
+activate gameManager
+
+main -> menuScreen : paint
+main -> gameManager : run
+
+alt About
+thePlayer -> menuListener : choose
+menuListener -> gameManager : about
+gameManager -> aboutScreen : showAbout
+activate aboutScreen
+end
+
+alt Setting
+thePlayer -> menuListener : choose
+menuListener -> gameManager : setting
+gameManager -> settingScreen : showSetting
+activate settingScreen
+end
+
+alt Score
+thePlayer -> menuListener : choose
+menuListener -> gameManager : score
+gameManager -> scoreScreen : showScore
+activate scoreScreen
+end
+
+== A New Game ==
+
+alt NewGame
+thePlayer -> menuListener : choose
+menuListener -> gameManager : newGame
+gameManager -> gameScreen : paint
+
+forbiddenGame -> forbiddenGame : init
+forbiddenGame -> cardDeck : cardDeck
+activate cardDeck
+loop
+cardDeck -> cards : cards
+activate cards
+end
+
+forbiddenGame -> map : map
+activate map
+loop
+forbiddenGame -> player : player
+activate player
+end
+loop
+forbiddenGame -> islandTile : islandTile
+activate islandTile
+end
+newpage
+loop Round
+== Player Actions(3) ==
+    alt Move
+        thePlayer -> playerListener : move
+        playerListener -> forbiddenGame : move
+        forbiddenGame -> player: setPlace
+    end
+
+    alt Reinforcement
+        thePlayer -> playerListener : reinforcement
+        playerListener -> forbiddenGame : reinforcement
+        forbiddenGame -> islandTile: setState
+    end
+
+    alt ExchangeTreasure
+        thePlayer -> playerListener : exchangeTreasure
+        playerListener -> forbiddenGame : exchangeTreasure
+        forbiddenGame -> islandTile : checkState
+        forbiddenGame -> treasure: treasure
+        activate treasure
+    end
+
+    alt ChangeCards
+        thePlayer -> playerListener : changeCard
+        playerListener -> forbiddenGame : changeCard
+        forbiddenGame -> islandTile : checkPlayer
+        forbiddenGame -> player: setCards
+    end
+
+    alt Skills
+        thePlayer -> playerListener : skill
+        playerListener -> forbiddenGame : skill
+        forbiddenGame -> player : skill
+        player -> forbiddenGame : skill
+    end
+
+== DrawTreasureCard ==
+    forbiddenGame -> cardDeck : add
+    cardDeck -> cards : cards
+    alt Fold
+    thePlayer -> playerListener : choose
+    playerListener -> forbiddenGame : choose
+    forbiddenGame -> cardDeck : delete
+    end
+
+== DrawFloodCard ==
+    forbiddenGame -> cardDeck : add
+    forbiddenGame -> islandTile : setState
+    alt Sunk
+        forbiddenGame -> islandTile : remove
+    end
+
+== CheckGameFailed ==
+    alt Can't Move or Treasure Sunk or Helicopters Sunk
+        forbiddenGame -> forbiddenGame : gameOver
+        forbiddenGame -> menuScreen : paint
+    end
+
+== CheckGameWin ==
+    alt At Helicopter Island or Got 4 Treasure or Helicopter Card
+        forbiddenGame -> forbiddenGame : gameWin
+        forbiddenGame -> menuScreen : paint
+    end
+
+end
+== Exit ==
+deactivate main
+deactivate playerListener
+deactivate menuListener
+deactivate forbiddenGame
+deactivate gameScreen
+deactivate menuScreen
+deactivate scoreKeeper
+deactivate gameManager
+deactivate aboutScreen
+deactivate settingScreen
+deactivate scoreScreen
+deactivate cardDeck
+deactivate cards
+deactivate map
+deactivate player
+deactivate islandTile
+deactivate treasure
+@enduml
