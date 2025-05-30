@@ -56,9 +56,9 @@ public class SettingScreenController {//每个页面的交互逻辑处理
         }
     }
 
-    @FXML private void mouseClickedBack(MouseEvent event) {ForbiddenGame.toMenu();}//鼠标点击back回到主页面
+    @FXML public void mouseClickedBack(MouseEvent event) {ForbiddenGame.toMenu();}//鼠标点击back回到主页面
 
-    @FXML private void mouseEnteredBack(MouseEvent event) {back.setOpacity(0.5);}
+    @FXML public void mouseEnteredBack(MouseEvent event) {back.setOpacity(0.5);}
 
-    @FXML private void mouseExitedBack(MouseEvent event) {back.setOpacity(1);}
+    @FXML public void mouseExitedBack(MouseEvent event) {back.setOpacity(1);}
 }
