@@ -6,12 +6,14 @@ import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.effect.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import team.group.myforbidden.model.*;
 
@@ -82,28 +84,27 @@ public class GameScreenController {
     @FXML private Label action;
     @FXML private Label level;
     @FXML private Button nextTurn;
-    @FXML private Button useSkill;//页面的fxml组件
+    @FXML private Button useSkill;
 
-    private static ImageView[] places;//记录所有岛屿
-    private ImageView[] playerPawns;//玩家棋子
-    private int shoreUpState = 0;//加固行动点
-    public static int[] placeOfPlayer = new int[6];//玩家位置数组
-    private Queue<TreasureCard> playerOneTreasureCard;//
+    private static ImageView[] places;
+    private ImageView[] playerPawns;
+    private int shoreUpState = 0;
+    public static int[] placeOfPlayer = new int[6];
+    private Queue<TreasureCard> playerOneTreasureCard;
     private Queue<TreasureCard> playerTwoTreasureCard;
     private Queue<TreasureCard> playerThreeTreasureCard;
-    private Queue<TreasureCard> playerFourTreasureCard;//分别记录玩家手牌
+    private Queue<TreasureCard> playerFourTreasureCard;
     private ImageView[] playerOneHandImages;
     private ImageView[] playerTwoHandImages;
     private ImageView[] playerThreeHandImages;
-    private ImageView[] playerFourHandImages;//玩家手牌位置的image
-    private ArrayList<Integer> floodToDraw;//没用
-    private int givePlayerIndex;//被给牌玩家的下标
-    private int useEngineerSkill = 0;//工程师技能点
-    private int usePilotSkill = 1;//飞行员技能点
-    private int playerToMoveIndex = 0;//被导航元移动玩家的下标
-    static Map<ImageView, String> imagePathMap = new HashMap<>();//岛屿的资源路径
+    private ImageView[] playerFourHandImages;
+    private int givePlayerIndex;
+    private int useEngineerSkill = 0;
+    private int usePilotSkill = 1;
+    private int playerToMoveIndex = 0;
+    static Map<ImageView, String> imagePathMap = new HashMap<>();
 
-    public static boolean checkSunk() {//判断是否沉没，宝藏岛屿和直升机岛屿是否沉没导致失败
+    public static boolean checkSunk() {
         int fireSunk = 0;
         int windSunk = 0;
         int earthSunk = 0;
@@ -149,7 +150,7 @@ public class GameScreenController {
     }
 
     @FXML
-    private void initialize() {//初始化游戏主界面
+    private void initialize() {
         places = new ImageView[]{
                 place0, place1, place2, place3, place4, place5,
                 place6, place7, place8, place9, place10, place11,
@@ -231,7 +232,7 @@ public class GameScreenController {
 //        }
     }
 
-    private void setPlayerHands() {//设置玩家手牌
+    private void setPlayerHands() {
         for (int i = 0; i < 4; i++) {
             Player[] players = ForbiddenGame.players;
             if (players[i] == null) {
@@ -246,7 +247,7 @@ public class GameScreenController {
         }
     }
 
-    private void drawPlayerHands() {//画出玩家手牌
+    private void drawPlayerHands() {
         // 玩家1
         for (int i = 0; i < playerOneHandImages.length; i++) {
             playerOneHandImages[i].setImage(null); // 清空旧图片
@@ -293,7 +294,7 @@ public class GameScreenController {
     }
 
 
-    private void flood(ImageView imageView) {//洪水覆盖岛屿
+    private void flood(ImageView imageView) {
         Boolean flooded = (Boolean) imageView.getProperties().get("flooded");
         if (Boolean.TRUE.equals(flooded)) {
             sunk(imageView);
@@ -323,9 +324,9 @@ public class GameScreenController {
 
     private void sunk(ImageView imageView) {
         imageView.setOpacity(0);
-    }//淹没岛屿
+    }
 
-    private void shoreUp(ImageView imageView) {//加固
+    private void shoreUp(ImageView imageView) {
         imageView.setEffect(null);              // 移除视觉特效
         imageView.setOpacity(1.0);              // 恢复不透明度
         imageView.setRotate(0);
@@ -352,7 +353,7 @@ public class GameScreenController {
     }
 
 
-    private void drawFlood() {//画洪水效果
+    private void drawFlood() {
         for (int i = 0; i < 6; i++) {
             Integer index = ForbiddenGame.getInstance().getFloodCard().poll();
             if (index != null) {
@@ -387,7 +388,7 @@ public class GameScreenController {
         }
     }
 
-    private void drawNextTurnFlood() {//画出下一回合抽到洪水卡的洪水效果
+    private void drawNextTurnFlood() {
         for (int i = 0; i < ForbiddenGame.getLevel(); i++) {
             Integer index = ForbiddenGame.getInstance().getFloodCard().poll();
             if (index != null) {
@@ -422,7 +423,7 @@ public class GameScreenController {
         }
     }
 
-    private void drawPlayers() {//画出玩家棋子头像
+    private void drawPlayers() {
         ImageView[] playerCards = { cornerTopLeft, cornerTopRight, cornerBottomLeft, cornerBottomRight };
         playerPawns = new ImageView[]{pawnOne, pawnTwo, pawnThree, pawnFour};
 
@@ -488,7 +489,7 @@ public class GameScreenController {
     }
 
     @FXML
-    void mouseClickedCapture(MouseEvent event) {//鼠标点击，把获取宝藏添加到宝藏堆并删除宝藏手牌
+    void mouseClickedCapture(MouseEvent event) {
         if (ForbiddenGame.getActionRemain() == 0) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Notice");
@@ -568,9 +569,11 @@ public class GameScreenController {
         });
     }
 
+    private boolean canGiveState = false;
 
     @FXML
-    void mouseClickedGive(MouseEvent event) {//给牌
+    void mouseClickedGive(MouseEvent event) {
+        canGiveState = true;
         if (ForbiddenGame.getActionRemain() == 0) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Notice");
@@ -579,8 +582,6 @@ public class GameScreenController {
             alert.showAndWait();
             return;
         }
-        ForbiddenGame.getInstance().useAction();
-        setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Give Card Instruction");
         alert.setHeaderText(null);
@@ -589,7 +590,7 @@ public class GameScreenController {
     }
 
     @FXML
-    void mouseClickedMove(MouseEvent event) {//移动
+    void mouseClickedMove(MouseEvent event) {
         if (ForbiddenGame.getActionRemain() == 0) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Notice");
@@ -598,7 +599,6 @@ public class GameScreenController {
             alert.showAndWait();
             return;
         }
-        ForbiddenGame.getInstance().useAction();
         setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
 
         int curPlayerIndex = ForbiddenGame.getInstance().getCurPlayerIndex();
@@ -620,25 +620,52 @@ public class GameScreenController {
             ImageView pawn = playerPawns[curPlayerIndex];
 
             if (chosen == btnUp) {
+                ForbiddenGame.getInstance().useAction();
                 pawn.setTranslateY(pawn.getTranslateY() - 105);
                 System.out.println("Selected Up");
             } else if (chosen == btnDown) {
+                ForbiddenGame.getInstance().useAction();
                 pawn.setTranslateY(pawn.getTranslateY() + 105);
                 System.out.println("Selected Down");
             } else if (chosen == btnLeft) {
+                ForbiddenGame.getInstance().useAction();
                 pawn.setTranslateX(pawn.getTranslateX() - 108);
                 System.out.println("Selected Left");
             } else if (chosen == btnRight) {
+                ForbiddenGame.getInstance().useAction();
                 pawn.setTranslateX(pawn.getTranslateX() + 108);
                 System.out.println("Selected Right");
             } else {
                 System.out.println("Selection cancelled");
             }
         }
+        setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+    }
+
+    private boolean isTileAdjacent(ImageView tileA, ImageView tileB) {
+        if (tileA == null || tileB == null) return false;
+
+        // 如果是同一个节点，算作“脚下”也视为相邻
+        if (tileA == tileB) return true;
+
+        Integer rowA = GridPane.getRowIndex(tileA);
+        Integer colA = GridPane.getColumnIndex(tileA);
+        Integer rowB = GridPane.getRowIndex(tileB);
+        Integer colB = GridPane.getColumnIndex(tileB);
+
+        if (rowA == null) rowA = 0;
+        if (colA == null) colA = 0;
+        if (rowB == null) rowB = 0;
+        if (colB == null) colB = 0;
+
+        boolean sameRowAndColAdjacent = rowA.equals(rowB) && Math.abs(colA - colB) == 1;
+        boolean sameColAndRowAdjacent = colA.equals(colB) && Math.abs(rowA - rowB) == 1;
+
+        return sameRowAndColAdjacent || sameColAndRowAdjacent;
     }
 
     @FXML
-    void mouseClickedShoreUp(MouseEvent event) {//加固
+    void mouseClickedShoreUp(MouseEvent event) {
         if (ForbiddenGame.getActionRemain() == 0) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Notice");
@@ -647,26 +674,8 @@ public class GameScreenController {
             alert.showAndWait();
             return;
         }
-        boolean haveSand = false;
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        for (TreasureCard treasureCard : player.getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                haveSand = true;
-            }
-        }
-        if (!haveSand) {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("No Sandbags Available");
-            alert.setHeaderText(null);
-            alert.setContentText("You do not have any Sandbags in your hand.");
-            alert.showAndWait();
-            return;
-        }
-        ForbiddenGame.getInstance().useAction();
-        setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
 
         shoreUpState = 1;
-
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Shore Up Instruction");
         alert.setHeaderText(null);
@@ -692,7 +701,7 @@ public class GameScreenController {
     @FXML void mouseExitedUseSkill(MouseEvent event) {useSkill.setOpacity(1);}
 
     @FXML
-    void mouseClickedUseSkill(MouseEvent event) {//使用技能，根据玩家角色触发不同技能
+    void mouseClickedUseSkill(MouseEvent event) {
         if (ForbiddenGame.getActionRemain() == 0) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Notice");
@@ -964,10 +973,40 @@ public class GameScreenController {
             }
         });
     }
-//八个方法六个技能两个鼠标阻塞方法
+
+    private boolean isUnderlyingTileTransparent(ImageView pawn) {
+        Bounds pawnBoundsInScene = pawn.localToScene(pawn.getBoundsInLocal());
+
+        double pawnCenterX = pawnBoundsInScene.getMinX() + pawnBoundsInScene.getWidth() / 2.0;
+        double pawnCenterY = pawnBoundsInScene.getMinY() + pawnBoundsInScene.getHeight() / 2.0;
+
+        for (ImageView islandTile : places) {
+            if (islandTile == null) continue;
+            Bounds tileBoundsInScene = islandTile.localToScene(islandTile.getBoundsInLocal());
+            if (tileBoundsInScene.contains(pawnCenterX, pawnCenterY)) {
+                return islandTile.getOpacity() == 0.0;
+            }
+        }
+
+        return false;
+    }
+
 
     @FXML
-    void mouseClickedNextTurn(MouseEvent event) {//进入下一回合
+    void mouseClickedNextTurn(MouseEvent event) {
+       for (ImageView pawn : playerPawns) {
+           boolean isTransparent = isUnderlyingTileTransparent(pawn);
+           if (isTransparent) {
+               Alert alert = new Alert(Alert.AlertType.ERROR);
+               alert.setTitle("Game Over");
+               alert.setHeaderText("Player Dead");
+               alert.setContentText("You have died. Game over.");
+               alert.showAndWait();
+               ForbiddenGame.toMenu();
+           } else {
+           }
+       }
+
         usePilotSkill = 1;
         ForbiddenGame.getInstance().nextTurn();
         drawPlayerHands();
@@ -976,622 +1015,812 @@ public class GameScreenController {
         setLevelText(String.valueOf(ForbiddenGame.getLevel()));
     }
 
-    private void setActionText(String text) {//更新剩余行动点
+    private void setActionText(String text) {
         if (action != null) {
             action.setText(text);
         }
     }
 
-    private void setLevelText(String text) {//更新等级
+    private void setLevelText(String text) {
         if (level != null) {
             level.setText(text);
         }
     }
 
 
+    private ImageView getPawnTileByGameState() {
+        Player player = ForbiddenGame.getInstance().getCurPlayer();
+        int idx = player.getPlace();
+        return places[idx];
+    }
+
     @FXML
     void mouseClickedPlace0(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place0);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place0);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[0], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place0);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place0);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace1(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place1);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place1);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[1], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place1);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place1);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace2(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place2);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place2);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[2], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place2);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place2);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace3(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place3);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place3);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[3], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place3);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place3);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace4(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place4);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place4);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[4], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place4);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place4);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace5(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place5);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place5);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[5], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place5);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place5);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace6(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place6);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place6);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[6], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place6);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place6);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace7(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place7);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place7);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[7], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place7);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place7);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace8(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place8);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place8);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[8], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place8);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place8);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace9(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place9);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place9);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[9], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place9);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place9);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace10(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place10);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place10);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[10], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place10);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place10);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace11(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place11);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place11);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[11], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place11);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place11);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace12(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place12);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place12);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[12], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place12);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place12);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace13(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place13);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place13);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[13], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place13);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place13);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace14(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place14);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place14);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[14], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place14);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place14);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace15(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place15);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place15);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[15], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place15);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place15);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace16(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place16);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place16);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[16], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place16);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place16);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace17(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place17);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place17);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[17], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place17);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place17);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace18(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place18);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place18);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[18], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place18);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place18);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace19(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place19);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place19);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[19], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place19);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place19);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace20(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place20);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place20);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[20], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place20);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place20);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace21(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place21);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place21);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[21], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place21);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place21);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace22(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place22);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place22);
-                    shoreUpState--;
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[22], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place22);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place22);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
     }
 
     @FXML
     void mouseClickedPlace23(MouseEvent event) {
-        Queue<TreasureCard> newCards = new LinkedList<>();
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
-            shoreUp(place23);
-            useEngineerSkill--;
-            return;
-        }
-        for(TreasureCard treasureCard : ForbiddenGame.getInstance().getCurPlayer().getHandCards()) {
-            if (treasureCard.getTreasureCardType() == TreasureCardType.SANDBAG) {
-                if (shoreUpState == 1) {
-                    shoreUp(place23);
-                    shoreUpState--;
-                    ForbiddenGame.getInstance().getUsedTreasureCard().add( new TreasureCard(TreasureCardType.SANDBAG));
-                }
-            } else {
-                newCards.add(treasureCard);
+        ImageView pawnTile = getPawnTileByGameState();
+        if (isTileAdjacent(places[23], pawnTile)) {
+            Player player = ForbiddenGame.getInstance().getCurPlayer();
+            if (player.getType() == PlayerType.ENGINEER && (useEngineerSkill == 1 || useEngineerSkill == 2)) {
+                shoreUp(place23);
+                useEngineerSkill--;
+                return;
             }
+            if (shoreUpState == 1) {
+                shoreUp(place23);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                shoreUpState--;
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Action");
+            alert.setHeaderText(null);
+            alert.setContentText("The selected island is not adjacent.");
+            alert.showAndWait();
         }
-        player.setHandCards(newCards);
-        setPlayerHands();
-        drawPlayerHands();
-    }//鼠标点击每一个岛屿的操作，对于每个操作会更具手牌中的沙袋卡以及当前玩家角色进行判定，在最后更新玩家手牌以及岛屿
+    }
+
 
     @FXML
     void mouseClickedTopLeft(MouseEvent event) {
         playerToMoveIndex = 0;
-        givePlayerIndex = 0;
+        if (canGiveState == true) {
+            if (arePlayersOnSameTile(pawnOne, playerPawns[ForbiddenGame.getInstance().getCurPlayerIndex()])) {
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                givePlayerIndex = 0;
+                canGiveState = false;
+                targetPawn = pawnOne;
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Invalid Move");
+                alert.setHeaderText("Players on Different Islands");
+                alert.setContentText("The pawns are not on the same island.");
+                alert.showAndWait();
+            }
+        }
+
     }
 
     @FXML
     void mouseClickedTopRight(MouseEvent event) {
         playerToMoveIndex = 1;
-        givePlayerIndex = 1;
+        if (canGiveState == true) {
+            if (arePlayersOnSameTile(pawnTwo, playerPawns[ForbiddenGame.getInstance().getCurPlayerIndex()])) {
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                givePlayerIndex = 1;
+                canGiveState = false;
+                targetPawn = pawnTwo;
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Invalid Move");
+                alert.setHeaderText("Players on Different Islands");
+                alert.setContentText("The pawns are not on the same island.");
+                alert.showAndWait();
+            }
+        }
     }
 
     @FXML
     void mouseClickedDownLeft(MouseEvent event) {
         playerToMoveIndex = 2;
-        givePlayerIndex = 2;
+        if (canGiveState == true) {
+            if (arePlayersOnSameTile(pawnThree, playerPawns[ForbiddenGame.getInstance().getCurPlayerIndex()])) {
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                givePlayerIndex = 2;
+                canGiveState = false;
+                targetPawn = pawnThree;
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Invalid Move");
+                alert.setHeaderText("Players on Different Islands");
+                alert.setContentText("The pawns are not on the same island.");
+                alert.showAndWait();
+            }
+        }
     }
 
     @FXML
     void mouseClickedDownRight(MouseEvent event) {
         playerToMoveIndex = 3;
-        givePlayerIndex = 3;
-    }//根据点击的玩家头像确定给牌对象以及让谁移动
+        if (canGiveState == true) {
+            if (arePlayersOnSameTile(pawnFour, playerPawns[ForbiddenGame.getInstance().getCurPlayerIndex()])) {
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                givePlayerIndex = 3;
+                canGiveState = false;
+                targetPawn = pawnOne;
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Invalid Move");
+                alert.setHeaderText("Players on Different Islands");
+                alert.setContentText("The pawns are not on the same island.");
+                alert.showAndWait();
+            }
+        }
+    }
+
+    private ImageView getUnderlyingTile(ImageView pawn) {
+        if (pawn == null) return null;
+
+        Bounds pawnBoundsInScene = pawn.localToScene(pawn.getBoundsInLocal());
+        double centerX = pawnBoundsInScene.getMinX() + pawnBoundsInScene.getWidth() / 2.0;
+        double centerY = pawnBoundsInScene.getMinY() + pawnBoundsInScene.getHeight() / 2.0;
+
+        for (int i = 0; i < 24; i++) {
+            ImageView tile = getPlaceByIndex(i);
+            if (tile == null) continue;
+            Bounds tileBoundsInScene = tile.localToScene(tile.getBoundsInLocal());
+            if (tileBoundsInScene.contains(centerX, centerY)) {
+                return tile;
+            }
+        }
+        return null;
+    }
+
+    private ImageView getPlaceByIndex(int idx) {
+        return switch (idx) {
+            case 0  -> place0;
+            case 1  -> place1;
+            case 2  -> place2;
+            case 3  -> place3;
+            case 4  -> place4;
+            case 5  -> place5;
+            case 6  -> place6;
+            case 7  -> place7;
+            case 8  -> place8;
+            case 9  -> place9;
+            case 10 -> place10;
+            case 11 -> place11;
+            case 12 -> place12;
+            case 13 -> place13;
+            case 14 -> place14;
+            case 15 -> place15;
+            case 16 -> place16;
+            case 17 -> place17;
+            case 18 -> place18;
+            case 19 -> place19;
+            case 20 -> place20;
+            case 21 -> place21;
+            case 22 -> place22;
+            case 23 -> place23;
+            default -> null;
+        };
+    }
+
+
+    public boolean arePlayersOnSameTile(ImageView pawnA, ImageView pawnB) {
+        ImageView tileA = getUnderlyingTile(pawnA);
+        ImageView tileB = getUnderlyingTile(pawnB);
+        return tileA != null && tileA == tileB;
+    }
+
+    private ImageView targetPawn;
+
+    private boolean isSandbagsCard(ImageView imageView) {
+        if (imageView == null) return false;
+        Image img = imageView.getImage();
+        if (img == null) return false;
+
+        Image reference = new Image(
+                Objects.requireNonNull(
+                        getClass().getResourceAsStream("/team/group/myforbidden/image/treasurecard/sandbags.png")
+                )
+        );
+
+        if (img.getWidth() != reference.getWidth() || img.getHeight() != reference.getHeight()) {
+            return false;
+        }
+
+        javafx.scene.image.PixelReader pr1 = img.getPixelReader();
+        javafx.scene.image.PixelReader pr2 = reference.getPixelReader();
+        if (pr1 == null || pr2 == null) return false;
+
+        int x = (int) (img.getWidth() / 2);
+        int y = (int) (img.getHeight() / 2);
+        return pr1.getArgb(x, y) == pr2.getArgb(x, y);
+    }
+
+
+    private void useSandBag() {
+        shoreUpState = 1;
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Shore Up Instruction");
+        alert.setHeaderText(null);
+        alert.setContentText("Please click the island you want to shore up.");
+
+        ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        alert.getButtonTypes().setAll(btnOk);
+
+        alert.showAndWait();
+    }
 
     @FXML
     void mouseClicked11(MouseEvent event) {
+        if (isSandbagsCard(card11)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         targetPlayer.giveCard(playerOneTreasureCard.poll());
         ForbiddenGame.players[0].setHandCards(playerOneTreasureCard);
@@ -1601,6 +1830,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked12(MouseEvent event) {
+        if (isSandbagsCard(card12)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         TreasureCard treasureCard = playerOneTreasureCard.poll();
         playerOneTreasureCard.offer(treasureCard);
@@ -1612,6 +1849,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked13(MouseEvent event) {
+        if (isSandbagsCard(card13)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 2; i++) {
             TreasureCard treasureCard = playerOneTreasureCard.poll();
@@ -1625,6 +1870,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked14(MouseEvent event) {
+        if (isSandbagsCard(card14)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 3; i++) {
             TreasureCard treasureCard = playerOneTreasureCard.poll();
@@ -1638,6 +1891,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked15(MouseEvent event) {
+        if (isSandbagsCard(card15)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 4; i++) {
             TreasureCard treasureCard = playerOneTreasureCard.poll();
@@ -1651,6 +1912,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked21(MouseEvent event) {
+        if (isSandbagsCard(card21)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         targetPlayer.giveCard(playerTwoTreasureCard.poll());
         ForbiddenGame.players[1].setHandCards(playerTwoTreasureCard);
@@ -1660,6 +1929,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked22(MouseEvent event) {
+        if (isSandbagsCard(card22)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         TreasureCard treasureCard = playerTwoTreasureCard.poll();
         playerTwoTreasureCard.offer(treasureCard);
@@ -1671,6 +1948,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked23(MouseEvent event) {
+        if (isSandbagsCard(card23)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 2; i++) {
             TreasureCard treasureCard = playerTwoTreasureCard.poll();
@@ -1684,6 +1969,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked24(MouseEvent event) {
+        if (isSandbagsCard(card24)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 3; i++) {
             TreasureCard treasureCard = playerTwoTreasureCard.poll();
@@ -1697,6 +1990,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked25(MouseEvent event) {
+        if (isSandbagsCard(card25)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 4; i++) {
             TreasureCard treasureCard = playerTwoTreasureCard.poll();
@@ -1710,6 +2011,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked31(MouseEvent event) {
+        if (isSandbagsCard(card31)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         targetPlayer.giveCard(playerThreeTreasureCard.poll());
         ForbiddenGame.players[2].setHandCards(playerThreeTreasureCard);
@@ -1719,6 +2028,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked32(MouseEvent event) {
+        if (isSandbagsCard(card32)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         TreasureCard treasureCard = playerThreeTreasureCard.poll();
         playerThreeTreasureCard.offer(treasureCard);
@@ -1730,6 +2047,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked33(MouseEvent event) {
+        if (isSandbagsCard(card33)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 2; i++) {
             TreasureCard treasureCard = playerThreeTreasureCard.poll();
@@ -1743,6 +2068,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked34(MouseEvent event) {
+        if (isSandbagsCard(card34)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 3; i++) {
             TreasureCard treasureCard = playerThreeTreasureCard.poll();
@@ -1756,6 +2089,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked35(MouseEvent event) {
+        if (isSandbagsCard(card35)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 4; i++) {
             TreasureCard treasureCard = playerThreeTreasureCard.poll();
@@ -1769,6 +2110,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked41(MouseEvent event) {
+        if (isSandbagsCard(card41)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         targetPlayer.giveCard(playerFourTreasureCard.poll());
         ForbiddenGame.players[3].setHandCards(playerFourTreasureCard);
@@ -1778,6 +2127,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked42(MouseEvent event) {
+        if (isSandbagsCard(card42)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         TreasureCard treasureCard = playerFourTreasureCard.poll();
         playerFourTreasureCard.offer(treasureCard);
@@ -1789,6 +2146,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked43(MouseEvent event) {
+        if (isSandbagsCard(card43)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 2; i++) {
             TreasureCard treasureCard = playerFourTreasureCard.poll();
@@ -1802,6 +2167,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked44(MouseEvent event) {
+        if (isSandbagsCard(card44)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 3; i++) {
             TreasureCard treasureCard = playerFourTreasureCard.poll();
@@ -1815,6 +2188,14 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked45(MouseEvent event) {
+        if (isSandbagsCard(card45)) {
+            System.out.println("SandbagsCard Clicked");
+            useSandBag();
+        }
+        if (!canGiveState) {
+            return;
+        }
+
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 4; i++) {
             TreasureCard treasureCard = playerFourTreasureCard.poll();
@@ -1825,4 +2206,4 @@ public class GameScreenController {
         setPlayerHands();
         drawPlayerHands();
     }
-}//根据点击的卡牌来确认给出的卡牌，并在最后对玩家手牌堆进行更新
+}
