@@ -1088,95 +1088,146 @@ public class GameScreenController {
     @FXML
     private void diverSkill() {
         // 1. 提示玩家
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Diver Skill");
-        alert.setHeaderText(null);
-        alert.setContentText("You can travel through flooded tiles. Click on a dry island to land.");
-        alert.showAndWait();
+        Alert prompt = new Alert(Alert.AlertType.INFORMATION);
+        prompt.setTitle("Diver Skill");
+        prompt.setHeaderText(null);
+        prompt.setContentText("You can travel through flooded tiles. Click on a dry island to land.");
+        prompt.showAndWait();
 
-        // 2. 等待玩家下一次点击
+        // 2. 等待用户下一次点击
         waitForNextMouseClick(anchorPane, point -> {
-            double clickX = point.getX();
-            double clickY = point.getY();
-            log("DiverSkill: 用户点击坐标 (scene)=(" + clickX + ", " + clickY + ")");
+            double clickSceneX = point.getX();
+            double clickSceneY = point.getY();
+            log("[DEBUG] DiverSkill: 用户点击坐标 (scene)=(" + clickSceneX + ", " + clickSceneY + ")");
 
-            // 3. 找到点击位置对应的岛屿 tile（通过 localToScene 范围判断）
-            ImageView targetTile = null;
-            int targetIndex = -1;
-            for (int i = 0; i < places.length; i++) {
-                ImageView tile = places[i];
-                if (tile == null) continue;
+            // 3. 先把点击坐标从 Scene 坐标系转换到 gridPane 本地坐标系
+            Point2D localPt = gridPane.sceneToLocal(clickSceneX, clickSceneY);
+            double xLocal = localPt.getX();
+            double yLocal = localPt.getY();
 
-                // 拿到这个 tile 在 Scene 坐标系下的 Bounds
-                Bounds tileBoundsInScene = tile.localToScene(tile.getBoundsInLocal());
-                if (tileBoundsInScene.contains(clickX, clickY)) {
-                    targetTile = tile;
-                    targetIndex = i;
-                    break;
-                }
-            }
+            // 4. 准备 GridPane 行/列/间隙/宽高 信息
+            int cols = 6, rows = 6;
+            double hgap = gridPane.getHgap();
+            double vgap = gridPane.getVgap();
+            double totalW = gridPane.getWidth();
+            double totalH = gridPane.getHeight();
+            // 每个格子真正可用的宽高 = (总宽 - (cols-1)*hgap)/cols
+            double cellW = (totalW - (cols - 1) * hgap) / cols;
+            double cellH = (totalH - (rows - 1) * vgap) / rows;
 
-            if (targetTile != null) {
-                // 4. 检查是否被淹
-                Boolean flooded = (Boolean) targetTile.getProperties().get("flooded");
-                if (Boolean.TRUE.equals(flooded)) {
-                    Alert invalid = new Alert(Alert.AlertType.WARNING);
-                    invalid.setTitle("Invalid Landing");
-                    invalid.setHeaderText(null);
-                    invalid.setContentText("Cannot land on a flooded tile. Please choose a dry island.");
-                    invalid.showAndWait();
-                    log("DiverSkill: 目标 Tile（index=" + targetIndex + "）已被淹没，降落无效");
-                } else {
-                    // 5. 合法降落：移动对应 pawn 到 tile 的中心
-                    int curIdx = ForbiddenGame.getInstance().getCurPlayerIndex();
-                    ImageView pawnToMove = switch (curIdx) {
-                        case 0 -> pawnOne;
-                        case 1 -> pawnTwo;
-                        case 2 -> pawnThree;
-                        case 3 -> pawnFour;
-                        default -> null;
-                    };
-                    if (pawnToMove == null) {
-                        log("DiverSkill: 找不到玩家 " + curIdx + " 对应的 pawn");
-                    } else {
-                        // 计算 tile 相对于 anchorPane 的左上角坐标
-                        // anchorPane 的 Scene 坐标：
-                        Bounds anchorBounds = anchorPane.localToScene(anchorPane.getBoundsInLocal());
-                        // tile 的 Scene 坐标：
-                        Bounds tileBounds = targetTile.localToScene(targetTile.getBoundsInLocal());
-                        double tileRelX = tileBounds.getMinX() - anchorBounds.getMinX();
-                        double tileRelY = tileBounds.getMinY() - anchorBounds.getMinY();
-
-                        // pawn 居中对齐到 tile 中心的偏移
-                        double tileW = tileBounds.getWidth();
-                        double tileH = tileBounds.getHeight();
-                        double pawnW = pawnToMove.getBoundsInLocal().getWidth();
-                        double pawnH = pawnToMove.getBoundsInLocal().getHeight();
-                        double offsetX = (tileW - pawnW) / 2.0;
-                        double offsetY = (tileH - pawnH) / 2.0;
-
-                        pawnToMove.setLayoutX(tileRelX + offsetX);
-                        pawnToMove.setLayoutY(tileRelY + offsetY);
-
-                        // 扣除一次行动点并刷新
-                        ForbiddenGame.getInstance().useAction();
-                        setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
-
-                        log("DiverSkill: 玩家 " + curIdx + " 的 pawn 移动到 Tile（index="
-                                + targetIndex + "）中心");
-                    }
-                }
-            } else {
-                // 点击未命中任何 tile
+            // 5. 如果点击在 gridPane 之外，直接报错
+            if (xLocal < 0 || yLocal < 0 || xLocal > totalW || yLocal > totalH) {
                 Alert invalid = new Alert(Alert.AlertType.WARNING);
                 invalid.setTitle("Invalid Selection");
                 invalid.setHeaderText(null);
                 invalid.setContentText("Please click on a valid island tile.");
                 invalid.showAndWait();
-                log("DiverSkill: 点击位置不在任何有效岛屿上，操作取消");
+                log("[DEBUG] DiverSkill: 点击在 GridPane 外，操作取消");
+                return;
             }
+
+            // 6. 计算落在哪个行、列
+            int colIdx = (int) (xLocal / (cellW + hgap));
+            int rowIdx = (int) (yLocal / (cellH + vgap));
+            // 也要判定点击是否落在了 “gap 区域” 内
+            double xInCell = xLocal - colIdx * (cellW + hgap);
+            double yInCell = yLocal - rowIdx * (cellH + vgap);
+            if (xInCell > cellW || yInCell > cellH) {
+                // 实际点击在格子和格子之间的间隙里
+                Alert invalid = new Alert(Alert.AlertType.WARNING);
+                invalid.setTitle("Invalid Selection");
+                invalid.setHeaderText(null);
+                invalid.setContentText("Please click on a valid island tile.");
+                invalid.showAndWait();
+                log("[DEBUG] DiverSkill: 点击在格子间隙，操作取消 (row=" + rowIdx + ", col=" + colIdx + ")");
+                return;
+            }
+
+            // 7. 下面用一个静态的 “行列→索引” 表，映射到 places[] 的哪一个下标
+            //    -1 表示该行列没有岛屿
+            final int[][] indexGrid = {
+                    { -1, -1,  0,  1, -1, -1 },  // row = 0
+                    { -1,  2,  3,  4,  5, -1 },  // row = 1
+                    {  6,  7,  8,  9, 10, 11 },  // row = 2
+                    { 12, 13, 14, 15, 16, 17 },  // row = 3
+                    { -1, 18, 19, 20, 21, -1 },  // row = 4
+                    { -1, -1, 22, 23, -1, -1 }   // row = 5
+            };
+
+            // 判定行/列是否越界
+            if (rowIdx < 0 || rowIdx >= rows || colIdx < 0 || colIdx >= cols) {
+                Alert invalid = new Alert(Alert.AlertType.WARNING);
+                invalid.setTitle("Invalid Selection");
+                invalid.setHeaderText(null);
+                invalid.setContentText("Please click on a valid island tile.");
+                invalid.showAndWait();
+                log("[DEBUG] DiverSkill: 计算出的行列越界 (row=" + rowIdx + ", col=" + colIdx + ")");
+                return;
+            }
+
+            int targetIndex = indexGrid[rowIdx][colIdx];
+            if (targetIndex < 0) {
+                // 这个单元格本身就没有岛屿
+                Alert invalid = new Alert(Alert.AlertType.WARNING);
+                invalid.setTitle("Invalid Selection");
+                invalid.setHeaderText(null);
+                invalid.setContentText("Please click on a valid island tile.");
+                invalid.showAndWait();
+                log("[DEBUG] DiverSkill: 行列(row=" + rowIdx + ",col=" + colIdx + ") 对应无岛屿");
+                return;
+            }
+
+            // 8. 拿到对应的 ImageView（岛屿格子）
+            ImageView tile = places[targetIndex];
+            // 再检查它是不是被淹
+            Boolean flooded = (Boolean) tile.getProperties().get("flooded");
+            if (Boolean.TRUE.equals(flooded)) {
+                Alert invalid = new Alert(Alert.AlertType.WARNING);
+                invalid.setTitle("Invalid Landing");
+                invalid.setHeaderText(null);
+                invalid.setContentText("Cannot land on a flooded tile. Please choose a dry island.");
+                invalid.showAndWait();
+                log("[DEBUG] DiverSkill: 目标 Tile(index=" + targetIndex + ") 已被淹没");
+                return;
+            }
+
+            // 9. 合法降落：把当前玩家的 pawn 移到该 tile 的中心
+            int curIdx = ForbiddenGame.getInstance().getCurPlayerIndex();
+            ImageView pawnToMove = switch (curIdx) {
+                case 0 -> pawnOne;
+                case 1 -> pawnTwo;
+                case 2 -> pawnThree;
+                case 3 -> pawnFour;
+                default -> null;
+            };
+            if (pawnToMove == null) {
+                log("[DEBUG] DiverSkill: 找不到玩家 " + curIdx + " 对应的 pawn");
+                return;
+            }
+
+            // 先拿到 anchorPane 在 Scene 坐标里的 Bounds，用来做“参考原点”
+            Bounds anchorBounds = anchorPane.localToScene(anchorPane.getBoundsInLocal());
+            // 再拿到 tile 在 Scene 坐标里的 Bounds
+            Bounds tileBounds   = tile.localToScene(tile.getBoundsInLocal());
+
+            // 计算 tile 在 anchorPane 坐标系下的左上角
+            double tileRelX = tileBounds.getMinX() - anchorBounds.getMinX();
+            double tileRelY = tileBounds.getMinY() - anchorBounds.getMinY();
+            // 计算 pawn 要放在 tile 中心时的偏移
+            double offsetX = ( tileBounds.getWidth()  - pawnToMove.getBoundsInLocal().getWidth() )  / 2.0;
+            double offsetY = ( tileBounds.getHeight() - pawnToMove.getBoundsInLocal().getHeight() ) / 2.0;
+
+            pawnToMove.setLayoutX(tileRelX + offsetX);
+            pawnToMove.setLayoutY(tileRelY + offsetY);
+
+            // 消耗一次行动点并刷新显示
+            ForbiddenGame.getInstance().useAction();
+            setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+
+            log("[DEBUG] DiverSkill: 玩家 " + curIdx + " 的 pawn 移动到 Tile(index=" + targetIndex + ") 中心");
         });
     }
+
 
     private boolean isUnderlyingTileTransparent(ImageView pawn) {
         Bounds pawnBoundsInScene = pawn.localToScene(pawn.getBoundsInLocal());
