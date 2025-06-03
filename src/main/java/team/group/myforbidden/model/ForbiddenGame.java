@@ -46,7 +46,7 @@ public class ForbiddenGame {//游戏主逻辑，一个单例模式
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT);
 
         stage.setTitle("Forbidden Island");
-        stage.setResizable(false);
+//        stage.setResizable(false);
         stage.setScene(scene);
         stage.setWidth(SCREEN_WIDTH);
         stage.setHeight(SCREEN_HEIGHT);

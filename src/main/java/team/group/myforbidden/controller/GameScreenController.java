@@ -1087,35 +1087,32 @@ public class GameScreenController {
 
     @FXML
     private void diverSkill() {
-        // 1. 提示玩家
+        // 1. 提示玩家使用潜水员技能
         Alert prompt = new Alert(Alert.AlertType.INFORMATION);
         prompt.setTitle("Diver Skill");
         prompt.setHeaderText(null);
         prompt.setContentText("You can travel through flooded tiles. Click on a dry island to land.");
         prompt.showAndWait();
 
-        // 2. 等待用户下一次点击
+        // 2. 等待玩家下一次点击
         waitForNextMouseClick(anchorPane, point -> {
             double clickSceneX = point.getX();
             double clickSceneY = point.getY();
             log("[DEBUG] DiverSkill: 用户点击坐标 (scene)=(" + clickSceneX + ", " + clickSceneY + ")");
 
-            // 3. 先把点击坐标从 Scene 坐标系转换到 gridPane 本地坐标系
+            // —— 把 Scene 坐标转换到 GridPane 本地坐标系 ——
             Point2D localPt = gridPane.sceneToLocal(clickSceneX, clickSceneY);
             double xLocal = localPt.getX();
             double yLocal = localPt.getY();
 
-            // 4. 准备 GridPane 行/列/间隙/宽高 信息
+            // 3. 取出 GridPane 渲染完成后的真实宽高（不要用 getWidth()）
+            double totalW = gridPane.getLayoutBounds().getWidth();
+            double totalH = gridPane.getLayoutBounds().getHeight();
+            double hgap   = gridPane.getHgap();
+            double vgap   = gridPane.getVgap();
             int cols = 6, rows = 6;
-            double hgap = gridPane.getHgap();
-            double vgap = gridPane.getVgap();
-            double totalW = gridPane.getWidth();
-            double totalH = gridPane.getHeight();
-            // 每个格子真正可用的宽高 = (总宽 - (cols-1)*hgap)/cols
-            double cellW = (totalW - (cols - 1) * hgap) / cols;
-            double cellH = (totalH - (rows - 1) * vgap) / rows;
 
-            // 5. 如果点击在 gridPane 之外，直接报错
+            // 4. 先判定是否点在 GridPane 区域外
             if (xLocal < 0 || yLocal < 0 || xLocal > totalW || yLocal > totalH) {
                 Alert invalid = new Alert(Alert.AlertType.WARNING);
                 invalid.setTitle("Invalid Selection");
@@ -1126,35 +1123,41 @@ public class GameScreenController {
                 return;
             }
 
-            // 6. 计算落在哪个行、列
-            int colIdx = (int) (xLocal / (cellW + hgap));
-            int rowIdx = (int) (yLocal / (cellH + vgap));
-            // 也要判定点击是否落在了 “gap 区域” 内
+            // 5. 计算每个“格子实际宽度/高度”
+            //    （总宽减去所有的间隙，再平摊到 cols 列里；总高减去所有的间隙，再平摊到 rows 行里）
+            double cellW = (totalW - (cols - 1) * hgap) / cols;
+            double cellH = (totalH - (rows - 1) * vgap) / rows;
+
+            // 6. 计算当前 xLocal,yLocal 落在哪一列/哪一行
+            int colIdx = (int) ( xLocal / (cellW + hgap) );
+            int rowIdx = (int) ( yLocal / (cellH + vgap) );
+
+            // 7. 再判定“是否落在了格子之间的间隙里”
             double xInCell = xLocal - colIdx * (cellW + hgap);
             double yInCell = yLocal - rowIdx * (cellH + vgap);
             if (xInCell > cellW || yInCell > cellH) {
-                // 实际点击在格子和格子之间的间隙里
+                // 用户点到了行/列之间的 gap 区
                 Alert invalid = new Alert(Alert.AlertType.WARNING);
                 invalid.setTitle("Invalid Selection");
                 invalid.setHeaderText(null);
                 invalid.setContentText("Please click on a valid island tile.");
                 invalid.showAndWait();
-                log("[DEBUG] DiverSkill: 点击在格子间隙，操作取消 (row=" + rowIdx + ", col=" + colIdx + ")");
+                log("[DEBUG] DiverSkill: 点击落在了格子间隙 (row=" + rowIdx + ", col=" + colIdx + ")");
                 return;
             }
 
-            // 7. 下面用一个静态的 “行列→索引” 表，映射到 places[] 的哪一个下标
-            //    -1 表示该行列没有岛屿
+            // 8. 根据 FXML 中定义的 row/col → places[index] 对应关系，做一个映射表
+            //    -1 表示该位置并没有岛屿
             final int[][] indexGrid = {
-                    { -1, -1,  0,  1, -1, -1 },  // row = 0
-                    { -1,  2,  3,  4,  5, -1 },  // row = 1
-                    {  6,  7,  8,  9, 10, 11 },  // row = 2
-                    { 12, 13, 14, 15, 16, 17 },  // row = 3
-                    { -1, 18, 19, 20, 21, -1 },  // row = 4
-                    { -1, -1, 22, 23, -1, -1 }   // row = 5
+                    { -1, -1,  0,  1, -1, -1 },   // row=0
+                    { -1,  2,  3,  4,  5, -1 },   // row=1
+                    {  6,  7,  8,  9, 10, 11 },   // row=2
+                    { 12, 13, 14, 15, 16, 17 },   // row=3
+                    { -1, 18, 19, 20, 21, -1 },   // row=4
+                    { -1, -1, 22, 23, -1, -1 }    // row=5
             };
 
-            // 判定行/列是否越界
+            // 9. 判定 rowIdx, colIdx 是否越界
             if (rowIdx < 0 || rowIdx >= rows || colIdx < 0 || colIdx >= cols) {
                 Alert invalid = new Alert(Alert.AlertType.WARNING);
                 invalid.setTitle("Invalid Selection");
@@ -1167,7 +1170,7 @@ public class GameScreenController {
 
             int targetIndex = indexGrid[rowIdx][colIdx];
             if (targetIndex < 0) {
-                // 这个单元格本身就没有岛屿
+                // 这个格子根本就没有岛屿
                 Alert invalid = new Alert(Alert.AlertType.WARNING);
                 invalid.setTitle("Invalid Selection");
                 invalid.setHeaderText(null);
@@ -1177,9 +1180,8 @@ public class GameScreenController {
                 return;
             }
 
-            // 8. 拿到对应的 ImageView（岛屿格子）
+            // 10. 拿到真正的 ImageView tile，再判断它是否被淹没
             ImageView tile = places[targetIndex];
-            // 再检查它是不是被淹
             Boolean flooded = (Boolean) tile.getProperties().get("flooded");
             if (Boolean.TRUE.equals(flooded)) {
                 Alert invalid = new Alert(Alert.AlertType.WARNING);
@@ -1191,7 +1193,7 @@ public class GameScreenController {
                 return;
             }
 
-            // 9. 合法降落：把当前玩家的 pawn 移到该 tile 的中心
+            // 11. 合法降落 → 把当前玩家 pawn 移到该 tile 的中心
             int curIdx = ForbiddenGame.getInstance().getCurPlayerIndex();
             ImageView pawnToMove = switch (curIdx) {
                 case 0 -> pawnOne;
@@ -1205,28 +1207,28 @@ public class GameScreenController {
                 return;
             }
 
-            // 先拿到 anchorPane 在 Scene 坐标里的 Bounds，用来做“参考原点”
+            // 11.1 先拿到 anchorPane 的 Scene 坐标范围
             Bounds anchorBounds = anchorPane.localToScene(anchorPane.getBoundsInLocal());
-            // 再拿到 tile 在 Scene 坐标里的 Bounds
+            // 11.2 再拿到 tile 在 Scene 坐标系中的 Bounds
             Bounds tileBounds   = tile.localToScene(tile.getBoundsInLocal());
 
-            // 计算 tile 在 anchorPane 坐标系下的左上角
+            // 11.3 计算 tile 在 anchorPane 坐标系下的左上角
             double tileRelX = tileBounds.getMinX() - anchorBounds.getMinX();
             double tileRelY = tileBounds.getMinY() - anchorBounds.getMinY();
-            // 计算 pawn 要放在 tile 中心时的偏移
-            double offsetX = ( tileBounds.getWidth()  - pawnToMove.getBoundsInLocal().getWidth() )  / 2.0;
-            double offsetY = ( tileBounds.getHeight() - pawnToMove.getBoundsInLocal().getHeight() ) / 2.0;
+            // 11.4 计算 pawn 要放在 tile 中心时的偏移
+            double offsetX = (tileBounds.getWidth()  - pawnToMove.getBoundsInLocal().getWidth())  / 2.0;
+            double offsetY = (tileBounds.getHeight() - pawnToMove.getBoundsInLocal().getHeight()) / 2.0;
 
             pawnToMove.setLayoutX(tileRelX + offsetX);
             pawnToMove.setLayoutY(tileRelY + offsetY);
 
-            // 消耗一次行动点并刷新显示
+            // 12. 消耗一次行动点并刷新右侧显示
             ForbiddenGame.getInstance().useAction();
             setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
-
             log("[DEBUG] DiverSkill: 玩家 " + curIdx + " 的 pawn 移动到 Tile(index=" + targetIndex + ") 中心");
         });
     }
+
 
 
     private boolean isUnderlyingTileTransparent(ImageView pawn) {
