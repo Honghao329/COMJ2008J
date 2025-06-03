@@ -98,7 +98,7 @@ public class GameScreenController {
     private ImageView[] playerTwoHandImages;
     private ImageView[] playerThreeHandImages;
     private ImageView[] playerFourHandImages;
-    private int givePlayerIndex;
+    private int givePlayerIndex = -1;
     private int useEngineerSkill = 0;
     private int usePilotSkill = 1;
     private int playerToMoveIndex = 0;
@@ -524,6 +524,7 @@ public class GameScreenController {
                     setPlayerHands();
                     drawPlayerHands();
                     ForbiddenGame.getInstance().add("fire", new Treasure(TreasureType.FIRE));
+                    System.out.println("Get Fire");
                 }
                 case "Wind" -> {
                     Queue<TreasureCard> newCards = new LinkedList<>();
@@ -537,6 +538,7 @@ public class GameScreenController {
                     setPlayerHands();
                     drawPlayerHands();
                     ForbiddenGame.getInstance().add("wind", new Treasure(TreasureType.WIND));
+                    System.out.println("Get Wind");
                 }
                 case "Ocean" -> {
                     Queue<TreasureCard> newCards = new LinkedList<>();
@@ -550,6 +552,7 @@ public class GameScreenController {
                     setPlayerHands();
                     drawPlayerHands();
                     ForbiddenGame.getInstance().add("ocean", new Treasure(TreasureType.OCEAN));
+                    System.out.println("Get Ocean");
                 }
                 case "Earth" -> {
                     Queue<TreasureCard> newCards = new LinkedList<>();
@@ -563,6 +566,7 @@ public class GameScreenController {
                     setPlayerHands();
                     drawPlayerHands();
                     ForbiddenGame.getInstance().add("earth", new Treasure(TreasureType.EARTH));
+                    System.out.println("Get Earth");
                 }
             }
             System.out.println("You chose: " + selected);
@@ -573,7 +577,7 @@ public class GameScreenController {
 
     @FXML
     void mouseClickedGive(MouseEvent event) {
-        canGiveState = true;
+        alreadyChosePlayer = false;
         if (ForbiddenGame.getActionRemain() == 0) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Notice");
@@ -582,10 +586,12 @@ public class GameScreenController {
             alert.showAndWait();
             return;
         }
+        // 进入“给牌”流程，等待点击目标玩家头像再点击手牌
+        canGiveState = true;
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Give Card Instruction");
         alert.setHeaderText(null);
-        alert.setContentText("Please click the avatar of the player you want to give the card to first, then click the card you want to give.");
+        alert.setContentText("Please click the player avatar you want to give the card to, then click the card in your hand.");
         alert.showAndWait();
     }
 
@@ -710,9 +716,7 @@ public class GameScreenController {
             alert.showAndWait();
             return;
         }
-        ForbiddenGame.getInstance().useAction();
-        setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
-        
+
         Player player = ForbiddenGame.getInstance().getCurPlayer();
         switch (player.getType()) {
             case DIVER -> diverSkill();
@@ -839,14 +843,14 @@ public class GameScreenController {
         return future;
     }
 
+    private boolean isMessenger = false;
+
     private void messengerSkill() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Card Giving Instruction");
         alert.setHeaderText("You may give a card to any player.");
         alert.setContentText("Please click the 'Give' button to proceed.");
-        alert.showAndWait();
-        ForbiddenGame.getInstance().useAction();
-        setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+        isMessenger = true;
         Alert alert2 = new Alert(Alert.AlertType.INFORMATION);
         alert2.setTitle("Give Card Instruction");
         alert2.setHeaderText(null);
@@ -855,33 +859,119 @@ public class GameScreenController {
     }
 
     private void explorerSkill() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Hint");
-        alert.setHeaderText(null);
-        alert.setContentText("You can move or shore up diagonally.");
-        alert.showAndWait();
+        // Prompt the player to choose “Move” or “Shore Up”
+        Alert choiceAlert = new Alert(Alert.AlertType.NONE);
+        choiceAlert.setTitle("Explorer Skill");
+        choiceAlert.setHeaderText("Choose Action");
+        choiceAlert.setContentText("You may move to an adjacent tile (including diagonals) or shore up an adjacent tile (including diagonals).");
+
+        ButtonType btnMove = new ButtonType("Move", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnShoreUp = new ButtonType("Shore Up", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        choiceAlert.getButtonTypes().setAll(btnMove, btnShoreUp, btnCancel);
+        Optional<ButtonType> choice = choiceAlert.showAndWait();
+        if (choice.isEmpty() || choice.get() == btnCancel) {
+            return; // User cancelled
+        }
+
+        boolean doMove = choice.get() == btnMove;
+        // Wait for the player to click a target tile
         waitForNextMouseClick(anchorPane, point -> {
-            System.out.println("Clicked at: " + point.getX() + ", " + point.getY());
-            switch (ForbiddenGame.getInstance().getCurPlayerIndex()) {
-                case 0 -> {
-                    pawnOne.setLayoutX(point.getX()-10);
-                    pawnOne.setLayoutY(point.getY()-20);
+            double clickX = point.getX();
+            double clickY = point.getY();
+
+            // 1. Find which tile (if any) the click corresponds to
+            ImageView targetTile = null;
+            for (ImageView tile : places) {
+                if (tile == null) continue;
+                Bounds tileBounds = tile.localToScene(tile.getBoundsInLocal());
+                if (tileBounds.contains(clickX, clickY)) {
+                    targetTile = tile;
+                    break;
                 }
-                case 1 -> {
-                    pawnTwo.setLayoutX(point.getX()-10);
-                    pawnTwo.setLayoutY(point.getY()-20);
-                }
-                case 2 -> {
-                    pawnThree.setLayoutX(point.getX()-10);
-                    pawnThree.setLayoutY(point.getY()-20);
-                }
-                case 3 -> {
-                    pawnFour.setLayoutX(point.getX()-10);
-                    pawnFour.setLayoutY(point.getY()-20);
-                }
+            }
+            if (targetTile == null) {
+                Alert invalid = new Alert(Alert.AlertType.WARNING);
+                invalid.setTitle("Invalid Action");
+                invalid.setHeaderText(null);
+                invalid.setContentText("Please click on a valid island tile.");
+                invalid.showAndWait();
+                return;
+            }
+
+            // 2. Find the player’s current tile
+            ImageView pawn = switch (ForbiddenGame.getInstance().getCurPlayerIndex()) {
+                case 0 -> pawnOne;
+                case 1 -> pawnTwo;
+                case 2 -> pawnThree;
+                case 3 -> pawnFour;
+                default -> null;
+            };
+            if (pawn == null) {
+                return;
+            }
+
+            ImageView currentTile = getUnderlyingTile(pawn);
+            if (currentTile == null) {
+                return;
+            }
+
+            // 3. Check adjacency (including diagonals)
+            Integer rowA = GridPane.getRowIndex(currentTile), colA = GridPane.getColumnIndex(currentTile);
+            Integer rowB = GridPane.getRowIndex(targetTile), colB = GridPane.getColumnIndex(targetTile);
+            if (rowA == null) rowA = 0;
+            if (colA == null) colA = 0;
+            if (rowB == null) rowB = 0;
+            if (colB == null) colB = 0;
+
+            int rowDiff = Math.abs(rowA - rowB);
+            int colDiff = Math.abs(colA - colB);
+            boolean isAdjacent = (rowDiff <= 1 && colDiff <= 1) && !(rowDiff == 0 && colDiff == 0);
+
+            if (!isAdjacent) {
+                Alert invalidAdj = new Alert(Alert.AlertType.WARNING);
+                invalidAdj.setTitle("Invalid Action");
+                invalidAdj.setHeaderText(null);
+                invalidAdj.setContentText("The selected tile is not adjacent to your current position (including diagonals).");
+                invalidAdj.showAndWait();
+                return;
+            }
+
+            // 4. Perform the chosen action
+            if (doMove) {
+                // Move pawn to the center of targetTile
+                double tileRelX = getRelativeXToAnchor(targetTile, anchorPane);
+                double tileRelY = getRelativeYToAnchor(targetTile, anchorPane);
+                double offsetX = (targetTile.getImage().getWidth() - pawn.getImage().getWidth()) / 2.0;
+                double offsetY = (targetTile.getImage().getHeight() - pawn.getImage().getHeight()) / 2.0;
+                pawn.setLayoutX(tileRelX + offsetX);
+                pawn.setLayoutY(tileRelY + offsetY);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+            } else {
+                // Shore up the target tile
+                shoreUp(targetTile);
+                ForbiddenGame.getInstance().useAction();
+                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
             }
         });
     }
+
+    // Helper: wait for next mouse click on a Node
+    private void waitForNextMouseClick(Node node, Consumer<Point2D> onClick) {
+        EventHandler<MouseEvent> handler = new EventHandler<>() {
+            @Override
+            public void handle(MouseEvent event) {
+                double x = event.getSceneX();
+                double y = event.getSceneY();
+                onClick.accept(new Point2D(x, y));
+                node.removeEventHandler(MouseEvent.MOUSE_CLICKED, this);
+            }
+        };
+        node.addEventHandler(MouseEvent.MOUSE_CLICKED, handler);
+    }
+
 
     private void waitForNextMouseClick(AnchorPane anchorPane, Consumer<Point2D> onClick) {
         EventHandler<MouseEvent> handler = new EventHandler<>() {
@@ -898,32 +988,74 @@ public class GameScreenController {
     }
 
 
+    @FXML
     private void pilotSkill() {
         if (usePilotSkill == 1) {
+            // 弹出提示，说明可以点击任意岛屿
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Move Instruction");
             alert.setHeaderText(null);
-            alert.setContentText("You can move to any tile on the board.");
+            alert.setContentText("You can move to any tile on the board. Please click on a valid island tile.");
             alert.showAndWait();
+
+            // 等待下一次点击
             waitForNextMouseClick(anchorPane, point -> {
-                System.out.println("Clicked at: " + point.getX() + ", " + point.getY());
-                switch (ForbiddenGame.getInstance().getCurPlayerIndex()) {
-                    case 0 -> {
-                        pawnOne.setLayoutX(point.getX()-10);
-                        pawnOne.setLayoutY(point.getY()-20);
+                double clickSceneX = point.getX();
+                double clickSceneY = point.getY();
+                log("PilotSkill: 用户点击坐标 (scene)：(" + clickSceneX + ", " + clickSceneY + ")");
+
+                // 1. 找到点击位置对应的岛屿 tile
+                ImageView clickedTile = null;
+                for (ImageView tile : places) {
+                    if (tile == null) continue;
+                    Bounds tileBoundsInScene = tile.localToScene(tile.getBoundsInLocal());
+                    if (tileBoundsInScene.contains(clickSceneX, clickSceneY)) {
+                        clickedTile = tile;
+                        break;
                     }
-                    case 1 -> {
-                        pawnTwo.setLayoutX(point.getX()-10);
-                        pawnTwo.setLayoutY(point.getY()-20);
+                }
+
+                if (clickedTile != null) {
+                    // 2. 找到对应玩家的 pawn，然后把其移动到该岛屿的中心位置
+                    int curIndex = ForbiddenGame.getInstance().getCurPlayerIndex();
+                    ImageView pawnToMove = null;
+                    switch (curIndex) {
+                        case 0 -> pawnToMove = pawnOne;
+                        case 1 -> pawnToMove = pawnTwo;
+                        case 2 -> pawnToMove = pawnThree;
+                        case 3 -> pawnToMove = pawnFour;
                     }
-                    case 2 -> {
-                        pawnThree.setLayoutX(point.getX()-10);
-                        pawnThree.setLayoutY(point.getY()-20);
+                    if (pawnToMove == null) {
+                        log("PilotSkill: 无法找到玩家 " + curIndex + " 对应的 pawn");
+                        return;
                     }
-                    case 3 -> {
-                        pawnFour.setLayoutX(point.getX()-10);
-                        pawnFour.setLayoutY(point.getY()-20);
-                    }
+
+                    // 计算 tile 相对于 anchorPane 的左上角坐标
+                    double tileRelX = getRelativeXToAnchor(clickedTile, anchorPane);
+                    double tileRelY = getRelativeYToAnchor(clickedTile, anchorPane);
+                    // 计算 pawn 要定位到 tile 中心时的偏移
+                    double offsetX = (clickedTile.getImage().getWidth() - pawnToMove.getImage().getWidth()) / 2.0;
+                    double offsetY = (clickedTile.getImage().getHeight() - pawnToMove.getImage().getHeight()) / 2.0;
+
+                    // 将 pawn 布局到 tile 中心
+                    pawnToMove.setLayoutX(tileRelX + offsetX);
+                    pawnToMove.setLayoutY(tileRelY + offsetY);
+
+                    log("PilotSkill: 玩家 " + curIndex + " 的 pawn 移动到 Tile（index="
+                            + Arrays.asList(places).indexOf(clickedTile) + "）中心");
+
+                    // 标记本回合的 pilot 技能已经用过
+                    usePilotSkill = 0;
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                } else {
+                    // 用户点击的地方不属于任何 island tile
+                    Alert invalidAlert = new Alert(Alert.AlertType.WARNING);
+                    invalidAlert.setTitle("Invalid Move");
+                    invalidAlert.setHeaderText(null);
+                    invalidAlert.setContentText("Please click on a valid island tile.");
+                    invalidAlert.showAndWait();
+                    log("PilotSkill: 点击位置不在任何有效岛屿上，移动取消");
                 }
             });
         } else {
@@ -933,10 +1065,16 @@ public class GameScreenController {
             alert.setContentText("This cannot be used again this turn.");
             alert.showAndWait();
         }
+    }
 
+    // 日志辅助方法（调试用，可放在类里任意位置）
+    private void log(String msg) {
+        System.out.println("[DEBUG] " + msg);
     }
 
     private void engineerSkill() {
+        ForbiddenGame.getInstance().useAction();
+        setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
         useEngineerSkill = 2;
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Drain Instruction");
@@ -945,31 +1083,97 @@ public class GameScreenController {
         alert.showAndWait();
     }
 
+    @FXML private GridPane gridPane;
+
+    @FXML
     private void diverSkill() {
+        // 1. 提示玩家
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Water Path Movement");
+        alert.setTitle("Diver Skill");
         alert.setHeaderText(null);
-        alert.setContentText("You can travel through water paths. Please select your destination.");
+        alert.setContentText("You can travel through flooded tiles. Click on a dry island to land.");
         alert.showAndWait();
+
+        // 2. 等待玩家下一次点击
         waitForNextMouseClick(anchorPane, point -> {
-            System.out.println("Clicked at: " + point.getX() + ", " + point.getY());
-            switch (ForbiddenGame.getInstance().getCurPlayerIndex()) {
-                case 0 -> {
-                    pawnOne.setLayoutX(point.getX()-10);
-                    pawnOne.setLayoutY(point.getY()-20);
+            double clickX = point.getX();
+            double clickY = point.getY();
+            log("DiverSkill: 用户点击坐标 (scene)=(" + clickX + ", " + clickY + ")");
+
+            // 3. 找到点击位置对应的岛屿 tile（通过 localToScene 范围判断）
+            ImageView targetTile = null;
+            int targetIndex = -1;
+            for (int i = 0; i < places.length; i++) {
+                ImageView tile = places[i];
+                if (tile == null) continue;
+
+                // 拿到这个 tile 在 Scene 坐标系下的 Bounds
+                Bounds tileBoundsInScene = tile.localToScene(tile.getBoundsInLocal());
+                if (tileBoundsInScene.contains(clickX, clickY)) {
+                    targetTile = tile;
+                    targetIndex = i;
+                    break;
                 }
-                case 1 -> {
-                    pawnTwo.setLayoutX(point.getX()-10);
-                    pawnTwo.setLayoutY(point.getY()-20);
+            }
+
+            if (targetTile != null) {
+                // 4. 检查是否被淹
+                Boolean flooded = (Boolean) targetTile.getProperties().get("flooded");
+                if (Boolean.TRUE.equals(flooded)) {
+                    Alert invalid = new Alert(Alert.AlertType.WARNING);
+                    invalid.setTitle("Invalid Landing");
+                    invalid.setHeaderText(null);
+                    invalid.setContentText("Cannot land on a flooded tile. Please choose a dry island.");
+                    invalid.showAndWait();
+                    log("DiverSkill: 目标 Tile（index=" + targetIndex + "）已被淹没，降落无效");
+                } else {
+                    // 5. 合法降落：移动对应 pawn 到 tile 的中心
+                    int curIdx = ForbiddenGame.getInstance().getCurPlayerIndex();
+                    ImageView pawnToMove = switch (curIdx) {
+                        case 0 -> pawnOne;
+                        case 1 -> pawnTwo;
+                        case 2 -> pawnThree;
+                        case 3 -> pawnFour;
+                        default -> null;
+                    };
+                    if (pawnToMove == null) {
+                        log("DiverSkill: 找不到玩家 " + curIdx + " 对应的 pawn");
+                    } else {
+                        // 计算 tile 相对于 anchorPane 的左上角坐标
+                        // anchorPane 的 Scene 坐标：
+                        Bounds anchorBounds = anchorPane.localToScene(anchorPane.getBoundsInLocal());
+                        // tile 的 Scene 坐标：
+                        Bounds tileBounds = targetTile.localToScene(targetTile.getBoundsInLocal());
+                        double tileRelX = tileBounds.getMinX() - anchorBounds.getMinX();
+                        double tileRelY = tileBounds.getMinY() - anchorBounds.getMinY();
+
+                        // pawn 居中对齐到 tile 中心的偏移
+                        double tileW = tileBounds.getWidth();
+                        double tileH = tileBounds.getHeight();
+                        double pawnW = pawnToMove.getBoundsInLocal().getWidth();
+                        double pawnH = pawnToMove.getBoundsInLocal().getHeight();
+                        double offsetX = (tileW - pawnW) / 2.0;
+                        double offsetY = (tileH - pawnH) / 2.0;
+
+                        pawnToMove.setLayoutX(tileRelX + offsetX);
+                        pawnToMove.setLayoutY(tileRelY + offsetY);
+
+                        // 扣除一次行动点并刷新
+                        ForbiddenGame.getInstance().useAction();
+                        setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+
+                        log("DiverSkill: 玩家 " + curIdx + " 的 pawn 移动到 Tile（index="
+                                + targetIndex + "）中心");
+                    }
                 }
-                case 2 -> {
-                    pawnThree.setLayoutX(point.getX()-10);
-                    pawnThree.setLayoutY(point.getY()-20);
-                }
-                case 3 -> {
-                    pawnFour.setLayoutX(point.getX()-10);
-                    pawnFour.setLayoutY(point.getY()-20);
-                }
+            } else {
+                // 点击未命中任何 tile
+                Alert invalid = new Alert(Alert.AlertType.WARNING);
+                invalid.setTitle("Invalid Selection");
+                invalid.setHeaderText(null);
+                invalid.setContentText("Please click on a valid island tile.");
+                invalid.showAndWait();
+                log("DiverSkill: 点击位置不在任何有效岛屿上，操作取消");
             }
         });
     }
@@ -1029,10 +1233,11 @@ public class GameScreenController {
 
 
     private ImageView getPawnTileByGameState() {
-        Player player = ForbiddenGame.getInstance().getCurPlayer();
-        int idx = player.getPlace();
-        return places[idx];
+        ImageView pawn = playerPawns[ForbiddenGame.getInstance().getCurPlayerIndex()];
+        return getUnderlyingTile(pawn);
     }
+
+    private boolean isSandBag = false;
 
     @FXML
     void mouseClickedPlace0(MouseEvent event) {
@@ -1046,8 +1251,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place0);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1071,8 +1279,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place1);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1096,8 +1307,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place2);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1121,8 +1335,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place3);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1146,8 +1363,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place4);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1171,8 +1391,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place5);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1196,8 +1419,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place6);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1221,8 +1447,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place7);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1246,8 +1475,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place8);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1271,8 +1503,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place9);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1296,8 +1531,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place10);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1321,8 +1559,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place11);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1346,8 +1587,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place12);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1371,8 +1615,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place13);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1396,8 +1643,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place14);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1421,8 +1671,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place15);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1446,8 +1699,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place16);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1471,8 +1727,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place17);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1496,8 +1755,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place18);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1521,8 +1783,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place19);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1546,8 +1811,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place20);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1571,8 +1839,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place21);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1596,8 +1867,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place22);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1621,8 +1895,11 @@ public class GameScreenController {
             }
             if (shoreUpState == 1) {
                 shoreUp(place23);
-                ForbiddenGame.getInstance().useAction();
-                setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                if (!isSandBag) {
+                    ForbiddenGame.getInstance().useAction();
+                    setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+                }
+                isSandBag = false;
                 shoreUpState--;
             }
         } else {
@@ -1634,16 +1911,26 @@ public class GameScreenController {
         }
     }
 
+    private boolean alreadyChosePlayer = false;
 
     @FXML
     void mouseClickedTopLeft(MouseEvent event) {
+        alreadyChosePlayer = true;
+        if (isMessenger) {
+            canGiveState = true;
+            ForbiddenGame.getInstance().useAction();
+            setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+            givePlayerIndex = 0;
+            targetPawn = pawnOne;
+            return;
+        }
         playerToMoveIndex = 0;
+        givePlayerIndex = 0;
         if (canGiveState == true) {
             if (arePlayersOnSameTile(pawnOne, playerPawns[ForbiddenGame.getInstance().getCurPlayerIndex()])) {
                 ForbiddenGame.getInstance().useAction();
                 setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
                 givePlayerIndex = 0;
-                canGiveState = false;
                 targetPawn = pawnOne;
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -1651,6 +1938,7 @@ public class GameScreenController {
                 alert.setHeaderText("Players on Different Islands");
                 alert.setContentText("The pawns are not on the same island.");
                 alert.showAndWait();
+                canGiveState = false;
             }
         }
 
@@ -1658,13 +1946,22 @@ public class GameScreenController {
 
     @FXML
     void mouseClickedTopRight(MouseEvent event) {
+        alreadyChosePlayer = true;
+        if (isMessenger) {
+            canGiveState = true;
+            ForbiddenGame.getInstance().useAction();
+            setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+            givePlayerIndex = 1;
+            targetPawn = pawnTwo;
+            return;
+        }
         playerToMoveIndex = 1;
+        givePlayerIndex = 1;
         if (canGiveState == true) {
             if (arePlayersOnSameTile(pawnTwo, playerPawns[ForbiddenGame.getInstance().getCurPlayerIndex()])) {
                 ForbiddenGame.getInstance().useAction();
                 setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
                 givePlayerIndex = 1;
-                canGiveState = false;
                 targetPawn = pawnTwo;
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -1672,19 +1969,29 @@ public class GameScreenController {
                 alert.setHeaderText("Players on Different Islands");
                 alert.setContentText("The pawns are not on the same island.");
                 alert.showAndWait();
+                canGiveState = false;
             }
         }
     }
 
     @FXML
     void mouseClickedDownLeft(MouseEvent event) {
+        alreadyChosePlayer = true;
+        if (isMessenger) {
+            canGiveState = true;
+            ForbiddenGame.getInstance().useAction();
+            setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+            givePlayerIndex = 2;
+            targetPawn = pawnThree;
+            return;
+        }
         playerToMoveIndex = 2;
+        givePlayerIndex = 2;
         if (canGiveState == true) {
             if (arePlayersOnSameTile(pawnThree, playerPawns[ForbiddenGame.getInstance().getCurPlayerIndex()])) {
                 ForbiddenGame.getInstance().useAction();
                 setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
                 givePlayerIndex = 2;
-                canGiveState = false;
                 targetPawn = pawnThree;
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -1692,26 +1999,38 @@ public class GameScreenController {
                 alert.setHeaderText("Players on Different Islands");
                 alert.setContentText("The pawns are not on the same island.");
                 alert.showAndWait();
+                canGiveState = false;
             }
         }
     }
 
     @FXML
     void mouseClickedDownRight(MouseEvent event) {
+        alreadyChosePlayer = true;
+        if (isMessenger) {
+            canGiveState = true;
+            ForbiddenGame.getInstance().useAction();
+            setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
+            givePlayerIndex = 3;
+            targetPawn = pawnOne;
+            return;
+        }
         playerToMoveIndex = 3;
+        givePlayerIndex = 3;
         if (canGiveState == true) {
             if (arePlayersOnSameTile(pawnFour, playerPawns[ForbiddenGame.getInstance().getCurPlayerIndex()])) {
                 ForbiddenGame.getInstance().useAction();
                 setActionText(String.valueOf(ForbiddenGame.getActionRemain()));
                 givePlayerIndex = 3;
-                canGiveState = false;
                 targetPawn = pawnOne;
+                isMessenger = false;
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Invalid Move");
                 alert.setHeaderText("Players on Different Islands");
                 alert.setContentText("The pawns are not on the same island.");
                 alert.showAndWait();
+                canGiveState = false;
             }
         }
     }
@@ -1799,6 +2118,10 @@ public class GameScreenController {
 
 
     private void useSandBag() {
+        if (canGiveState == true) {
+            canGiveState = false;
+        }
+        isSandBag = true;
         shoreUpState = 1;
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Shore Up Instruction");
@@ -1813,6 +2136,9 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked11(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card11)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -1826,10 +2152,14 @@ public class GameScreenController {
         ForbiddenGame.players[0].setHandCards(playerOneTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked12(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card12)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -1845,10 +2175,14 @@ public class GameScreenController {
         ForbiddenGame.players[0].setHandCards(playerOneTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked13(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card13)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -1866,10 +2200,14 @@ public class GameScreenController {
         ForbiddenGame.players[0].setHandCards(playerOneTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked14(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card14)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -1887,10 +2225,14 @@ public class GameScreenController {
         ForbiddenGame.players[0].setHandCards(playerOneTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked15(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card15)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -1908,10 +2250,14 @@ public class GameScreenController {
         ForbiddenGame.players[0].setHandCards(playerOneTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked21(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card21)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -1925,10 +2271,14 @@ public class GameScreenController {
         ForbiddenGame.players[1].setHandCards(playerTwoTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked22(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card22)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -1944,10 +2294,14 @@ public class GameScreenController {
         ForbiddenGame.players[1].setHandCards(playerTwoTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked23(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card23)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -1965,10 +2319,14 @@ public class GameScreenController {
         ForbiddenGame.players[1].setHandCards(playerTwoTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked24(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card24)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -1986,10 +2344,14 @@ public class GameScreenController {
         ForbiddenGame.players[1].setHandCards(playerTwoTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked25(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card25)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -2007,10 +2369,14 @@ public class GameScreenController {
         ForbiddenGame.players[1].setHandCards(playerTwoTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked31(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card31)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -2024,10 +2390,14 @@ public class GameScreenController {
         ForbiddenGame.players[2].setHandCards(playerThreeTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked32(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card32)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -2043,10 +2413,14 @@ public class GameScreenController {
         ForbiddenGame.players[2].setHandCards(playerThreeTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked33(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card33)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -2064,10 +2438,14 @@ public class GameScreenController {
         ForbiddenGame.players[2].setHandCards(playerThreeTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked34(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card34)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -2085,10 +2463,14 @@ public class GameScreenController {
         ForbiddenGame.players[2].setHandCards(playerThreeTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked35(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card35)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -2106,10 +2488,14 @@ public class GameScreenController {
         ForbiddenGame.players[2].setHandCards(playerThreeTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked41(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card41)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -2123,10 +2509,14 @@ public class GameScreenController {
         ForbiddenGame.players[3].setHandCards(playerFourTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked42(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card42)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -2142,10 +2532,14 @@ public class GameScreenController {
         ForbiddenGame.players[3].setHandCards(playerFourTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked43(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card43)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -2163,10 +2557,14 @@ public class GameScreenController {
         ForbiddenGame.players[3].setHandCards(playerFourTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked44(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card44)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -2184,10 +2582,14 @@ public class GameScreenController {
         ForbiddenGame.players[3].setHandCards(playerFourTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 
     @FXML
     void mouseClicked45(MouseEvent event) {
+        if (!alreadyChosePlayer) {
+            return;
+        }
         if (isSandbagsCard(card45)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
@@ -2205,5 +2607,6 @@ public class GameScreenController {
         ForbiddenGame.players[3].setHandCards(playerFourTreasureCard);
         setPlayerHands();
         drawPlayerHands();
+        canGiveState = false;
     }
 }
