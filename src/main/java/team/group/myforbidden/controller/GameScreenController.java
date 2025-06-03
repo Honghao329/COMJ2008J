@@ -2243,35 +2243,53 @@ public class GameScreenController {
 
 
     private void useSandBag() {
-        if (canGiveState == true) {
+        // 退出“给牌”流程
+        if (canGiveState) {
             canGiveState = false;
         }
+
+        // 标记：下一次点击要 shore up
         isSandBag = true;
         shoreUpState = 1;
+
+        // —— 把那张 SANDBAG 卡从当前玩家手牌里摘掉，丢到弃牌堆 ——
+        Player curPlayer = ForbiddenGame.getInstance().getCurPlayer();
+        Queue<TreasureCard> hand = curPlayer.getHandCards();
+        TreasureCard toRemove = null;
+        for (TreasureCard card : hand) {
+            if (card.getTreasureCardType() == TreasureCardType.SANDBAG) {
+                toRemove = card;
+                break;
+            }
+        }
+        if (toRemove != null) {
+            hand.remove(toRemove);
+            ForbiddenGame.getInstance().getUsedTreasureCard().add(toRemove);
+            curPlayer.setHandCards(hand);
+            drawPlayerHands();
+        } else {
+            System.err.println("useSandBag(): 找不到对应的 TreasureCard");
+        }
+
+        // 弹窗让玩家点击想要 shore up 的岛屿
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Shore Up Instruction");
         alert.setHeaderText(null);
         alert.setContentText("Please click the island you want to shore up.");
-
-        ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-        alert.getButtonTypes().setAll(btnOk);
-
+        alert.getButtonTypes().setAll(new ButtonType("OK", ButtonBar.ButtonData.OK_DONE));
         alert.showAndWait();
     }
 
+
     @FXML
     void mouseClicked11(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card11)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         targetPlayer.giveCard(playerOneTreasureCard.poll());
         ForbiddenGame.players[0].setHandCards(playerOneTreasureCard);
@@ -2282,17 +2300,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked12(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card12)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         TreasureCard treasureCard = playerOneTreasureCard.poll();
         playerOneTreasureCard.offer(treasureCard);
@@ -2305,17 +2319,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked13(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card13)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 2; i++) {
             TreasureCard treasureCard = playerOneTreasureCard.poll();
@@ -2330,17 +2340,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked14(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card14)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 3; i++) {
             TreasureCard treasureCard = playerOneTreasureCard.poll();
@@ -2355,17 +2361,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked15(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card15)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 4; i++) {
             TreasureCard treasureCard = playerOneTreasureCard.poll();
@@ -2380,17 +2382,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked21(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card21)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         targetPlayer.giveCard(playerTwoTreasureCard.poll());
         ForbiddenGame.players[1].setHandCards(playerTwoTreasureCard);
@@ -2401,17 +2399,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked22(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card22)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         TreasureCard treasureCard = playerTwoTreasureCard.poll();
         playerTwoTreasureCard.offer(treasureCard);
@@ -2424,17 +2418,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked23(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card23)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 2; i++) {
             TreasureCard treasureCard = playerTwoTreasureCard.poll();
@@ -2449,17 +2439,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked24(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card24)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 3; i++) {
             TreasureCard treasureCard = playerTwoTreasureCard.poll();
@@ -2474,17 +2460,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked25(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card25)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 4; i++) {
             TreasureCard treasureCard = playerTwoTreasureCard.poll();
@@ -2499,17 +2481,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked31(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card31)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         targetPlayer.giveCard(playerThreeTreasureCard.poll());
         ForbiddenGame.players[2].setHandCards(playerThreeTreasureCard);
@@ -2520,17 +2498,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked32(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card32)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         TreasureCard treasureCard = playerThreeTreasureCard.poll();
         playerThreeTreasureCard.offer(treasureCard);
@@ -2543,17 +2517,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked33(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card33)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 2; i++) {
             TreasureCard treasureCard = playerThreeTreasureCard.poll();
@@ -2568,17 +2538,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked34(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card34)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 3; i++) {
             TreasureCard treasureCard = playerThreeTreasureCard.poll();
@@ -2593,17 +2559,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked35(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card35)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 4; i++) {
             TreasureCard treasureCard = playerThreeTreasureCard.poll();
@@ -2618,17 +2580,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked41(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card41)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         targetPlayer.giveCard(playerFourTreasureCard.poll());
         ForbiddenGame.players[3].setHandCards(playerFourTreasureCard);
@@ -2639,17 +2597,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked42(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card42)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         TreasureCard treasureCard = playerFourTreasureCard.poll();
         playerFourTreasureCard.offer(treasureCard);
@@ -2662,17 +2616,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked43(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card43)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 2; i++) {
             TreasureCard treasureCard = playerFourTreasureCard.poll();
@@ -2687,17 +2637,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked44(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card44)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 3; i++) {
             TreasureCard treasureCard = playerFourTreasureCard.poll();
@@ -2712,17 +2658,13 @@ public class GameScreenController {
 
     @FXML
     void mouseClicked45(MouseEvent event) {
-        if (!alreadyChosePlayer) {
-            return;
-        }
         if (isSandbagsCard(card45)) {
             System.out.println("SandbagsCard Clicked");
             useSandBag();
-        }
-        if (!canGiveState) {
             return;
         }
-
+        if (!alreadyChosePlayer) return;
+        if (!canGiveState) return;
         Player targetPlayer = ForbiddenGame.players[givePlayerIndex];
         for (int i = 0; i < 4; i++) {
             TreasureCard treasureCard = playerFourTreasureCard.poll();
@@ -2734,4 +2676,5 @@ public class GameScreenController {
         drawPlayerHands();
         canGiveState = false;
     }
+
 }
